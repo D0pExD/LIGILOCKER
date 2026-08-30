@@ -7,7 +7,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ trolled: !!isTrolled });
     }
 
-    if (req.method === 'POST') {
+    if (req.method === 'POST' || req.method === 'PUT') {
       const { trolled } = req.body;
       await kv.set('isTrolled', !!trolled);
       return res.status(200).json({ trolled: !!trolled });
