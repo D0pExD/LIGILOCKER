@@ -26,8 +26,8 @@ function App() {
   };
 
   useEffect(() => {
-    fetchTrollState();
-    const interval = setInterval(fetchTrollState, 3000); // Check every 3 seconds
+    fetchTrollState(); // Check immediately on load
+    const interval = setInterval(fetchTrollState, 60000); // Check every 1 minute to save quota
     return () => clearInterval(interval);
   }, []);
 
