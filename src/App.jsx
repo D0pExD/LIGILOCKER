@@ -10,15 +10,15 @@ function App() {
   const [isTrolled, setIsTrolled] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // Global Troll State Polling
-  const TROLL_API = 'https://api.restful-api.dev/objects/ff808181a04ccf2d01a051d5c874155b';
+  // Global Troll State Polling via Vercel Serverless Function
+  const TROLL_API = '/api/troll';
 
   const fetchTrollState = async () => {
     try {
       const res = await fetch(TROLL_API);
       const json = await res.json();
-      if (json && json.data) {
-        setIsTrolled(json.data.trolled);
+      if (json && json.trolled !== undefined) {
+        setIsTrolled(json.trolled);
       }
     } catch (e) {
       console.error('Failed to fetch troll state');
@@ -69,8 +69,7 @@ function App() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          name: 'ligi_troll',
-          data: { trolled: newState }
+          trolled: newState
         })
       });
       setIsTrolled(newState);
