@@ -5,9 +5,31 @@ function App() {
   const [currentView, setCurrentView] = useState('home'); // home, search, issued, menu, aadhaarForm, aadhaarDetail
   const [aadhaarData, setAadhaarData] = useState(null);
   
-  // Custom routing for /whybro and trolled state
+  // Custom routing for /whybro and global trolled state
   const isWhyBroPage = window.location.pathname === '/whybro';
-  const [isTrolled, setIsTrolled] = useState(localStorage.getItem('ligi_trolled') === 'true');
+  const [isTrolled, setIsTrolled] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // Global Troll State Polling
+  const TROLL_API = 'https://api.restful-api.dev/objects/ff808181a04ccf2d01a051d5c874155b';
+
+  const fetchTrollState = async () => {
+    try {
+      const res = await fetch(TROLL_API);
+      const json = await res.json();
+      if (json && json.data) {
+        setIsTrolled(json.data.trolled);
+      }
+    } catch (e) {
+      console.error('Failed to fetch troll state');
+    }
+  };
+
+  useEffect(() => {
+    fetchTrollState();
+    const interval = setInterval(fetchTrollState, 3000); // Check every 3 seconds
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const savedData = localStorage.getItem('ligi_aadhaar_data');
@@ -36,21 +58,39 @@ function App() {
     }, 800);
   };
 
-  const toggleTroll = () => {
+  const toggleTroll = async () => {
+    if (isUpdating) return;
+    setIsUpdating(true);
     const newState = !isTrolled;
-    setIsTrolled(newState);
-    localStorage.setItem('ligi_trolled', newState.toString());
+    try {
+      await fetch(TROLL_API, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: 'ligi_troll',
+          data: { trolled: newState }
+        })
+      });
+      setIsTrolled(newState);
+    } catch (e) {
+      console.error('Failed to update troll state');
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   // If user is on /whybro, show the secret toggle page
   if (isWhyBroPage) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#1a1a1a', color: 'white', fontFamily: 'monospace' }}>
-        <h1 style={{ marginBottom: '30px' }}>Secret Control Panel</h1>
+        <h1 style={{ marginBottom: '30px', textAlign: 'center' }}>Global Control Panel</h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: '#333', padding: '20px', borderRadius: '10px' }}>
           <span style={{ fontSize: '1.2rem' }}>Prank Mode:</span>
           <button 
             onClick={toggleTroll}
+            disabled={isUpdating}
             style={{ 
               padding: '10px 20px', 
               fontSize: '1rem', 
@@ -59,14 +99,15 @@ function App() {
               color: 'white', 
               border: 'none', 
               borderRadius: '5px', 
-              cursor: 'pointer' 
+              cursor: isUpdating ? 'not-allowed' : 'pointer',
+              opacity: isUpdating ? 0.7 : 1
             }}
           >
-            {isTrolled ? 'ON' : 'OFF'}
+            {isUpdating ? '...' : isTrolled ? 'ON (Visible to ALL)' : 'OFF'}
           </button>
         </div>
-        <p style={{ marginTop: '20px', color: '#888' }}>
-          When ON, the main app will be disabled.
+        <p style={{ marginTop: '20px', color: '#888', textAlign: 'center', padding: '0 20px' }}>
+          When ON, the main app will be disabled for EVERYONE.
         </p>
       </div>
     );
