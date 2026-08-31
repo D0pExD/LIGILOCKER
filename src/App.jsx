@@ -148,9 +148,9 @@ function HomeView({ onAadhaarClick, aadhaarData }) {
         </div>
 
         <div className="welcome-section">
-          <h1>Welcome, {aadhaarData ? aadhaarData.name : 'Ram Chimnani'}</h1>
+          <h1>Welcome, {aadhaarData ? aadhaarData.name : 'who tf ?'}</h1>
           <img 
-            src={aadhaarData ? aadhaarData.photoUrl : "https://placehold.co/100x100/333/FFF?text=RC"} 
+            src={aadhaarData ? aadhaarData.photoUrl : "https://placehold.co/100x100/333/FFF?text=TF?"} 
             alt="Profile" 
             className="profile-pic" 
           />
@@ -309,11 +309,11 @@ function MenuView({ onEditAadhaar, hasData }) {
 
 function AadhaarForm({ initialData, onSave, onBack }) {
   const [formData, setFormData] = useState(initialData || {
-    name: 'Ram Chimnani',
-    dob: '2007-07-16',
+    name: 'WHO TF ?',
+    dob: '2000-07-16',
     gender: 'MALE',
-    address: 'S/O Kamal Chimnani, 1011, Sceem No.5, Vijay Nagar, Lamti, Near Bhulan Devi Mata Mandir, Vijay Nagar Colony, Jabalpur, Madhya Pradesh, 482002',
-    aadhaarSuffix: '3153',
+    address: 'enter ur address :(',
+    aadhaarSuffix: '6969',
     photoUrl: 'https://placehold.co/200x250/ccc/fff?text=Photo'
   });
   const fileInputRef = useRef(null);
