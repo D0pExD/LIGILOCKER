@@ -4,6 +4,10 @@ import './App.css';
 function App() {
   const [currentView, setCurrentView] = useState('home'); // home, search, issued, menu, aadhaarForm, aadhaarDetail
   const [aadhaarData, setAadhaarData] = useState(null);
+  
+  // Custom routing for /whybro and trolled state
+  const isWhyBroPage = window.location.pathname === '/whybro';
+  const [isTrolled, setIsTrolled] = useState(localStorage.getItem('ligi_trolled') === 'true');
 
   useEffect(() => {
     const savedData = localStorage.getItem('ligi_aadhaar_data');
@@ -31,6 +35,58 @@ function App() {
       setCurrentView('aadhaarDetail');
     }, 800);
   };
+
+  const toggleTroll = () => {
+    const newState = !isTrolled;
+    setIsTrolled(newState);
+    localStorage.setItem('ligi_trolled', newState.toString());
+  };
+
+  // If user is on /whybro, show the secret toggle page
+  if (isWhyBroPage) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#1a1a1a', color: 'white', fontFamily: 'monospace' }}>
+        <h1 style={{ marginBottom: '30px' }}>Secret Control Panel</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: '#333', padding: '20px', borderRadius: '10px' }}>
+          <span style={{ fontSize: '1.2rem' }}>Prank Mode:</span>
+          <button 
+            onClick={toggleTroll}
+            style={{ 
+              padding: '10px 20px', 
+              fontSize: '1rem', 
+              fontWeight: 'bold', 
+              backgroundColor: isTrolled ? '#ef4444' : '#22c55e', 
+              color: 'white', 
+              border: 'none', 
+              borderRadius: '5px', 
+              cursor: 'pointer' 
+            }}
+          >
+            {isTrolled ? 'ON' : 'OFF'}
+          </button>
+        </div>
+        <p style={{ marginTop: '20px', color: '#888' }}>
+          When ON, the main app will be disabled.
+        </p>
+      </div>
+    );
+  }
+
+  // If prank is active and we are NOT on /whybro, show the troll view
+  if (isTrolled) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#ffe4e1', textAlign: 'center', padding: '20px' }}>
+        <img 
+          src="https://i.pinimg.com/originals/ba/c2/06/bac206f4886b9d65d73eb803ba646e25.gif" 
+          alt="Funny Gif" 
+          style={{ maxWidth: '100%', borderRadius: '15px', marginBottom: '30px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }} 
+        />
+        <h2 style={{ color: '#d63384', fontFamily: 'comic sans ms, cursive, sans-serif', fontSize: '1.5rem', lineHeight: '1.5' }}>
+          contact the cutie to get your seen sorted :)
+        </h2>
+      </div>
+    );
+  }
 
   // We only show the BottomNav on main tabs
   const isMainTab = ['home', 'search', 'issued', 'menu'].includes(currentView);
