@@ -123,7 +123,7 @@ function App() {
           style={{ maxWidth: '100%', borderRadius: '15px', marginBottom: '30px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }} 
         />
         <h2 style={{ color: '#d63384', fontFamily: 'comic sans ms, cursive, sans-serif', fontSize: '1.5rem', lineHeight: '1.5' }}>
-          contact the cutie to get your seen sorted :)
+          contact the cutie to get your scene sorted :)
         </h2>
       </div>
     );
