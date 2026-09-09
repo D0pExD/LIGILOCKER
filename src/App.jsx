@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 
 function App() {
-  const [currentView, setCurrentView] = useState('home'); // home, search, issued, menu, aadhaarForm, aadhaarDetail
+  const [currentView, setCurrentView] = useState('home'); // home, search, issued, menu, aadhaarForm, aadhaarDetail, myProfile
   const [aadhaarData, setAadhaarData] = useState(null);
   
   // Custom routing for /whybro and global trolled state
@@ -139,9 +139,10 @@ function App() {
           <p>Fetching Document...</p>
         </div>
       )}
-      {currentView === 'home' && <HomeView onAadhaarClick={handleAadhaarClick} aadhaarData={aadhaarData} />}
+      {currentView === 'home' && <HomeView onAadhaarClick={handleAadhaarClick} onProfileClick={() => setCurrentView('myProfile')} aadhaarData={aadhaarData} />}
       {currentView === 'search' && <PlaceholderView title="Search" />}
       {currentView === 'issued' && <PlaceholderView title="Issued Documents" />}
+      {currentView === 'myProfile' && <MyProfileView data={aadhaarData} onBack={() => setCurrentView('home')} onEdit={() => setCurrentView('aadhaarForm')} />}
       {currentView === 'menu' && (
         <MenuView 
           onEditAadhaar={() => setCurrentView('aadhaarForm')} 
@@ -172,7 +173,7 @@ function App() {
 
 // ... (Skipping to AadhaarDetail component in next tool call) ...
 
-function HomeView({ onAadhaarClick, aadhaarData }) {
+function HomeView({ onAadhaarClick, onProfileClick, aadhaarData }) {
   return (
     <>
       <header className="header-container">
@@ -192,7 +193,8 @@ function HomeView({ onAadhaarClick, aadhaarData }) {
           <img 
             src={aadhaarData ? aadhaarData.photoUrl : "https://placehold.co/100x100/333/FFF?text=TF?"} 
             alt="Profile" 
-            className="profile-pic" 
+            className="profile-pic clickable" 
+            onClick={onProfileClick}
           />
         </div>
         
@@ -354,6 +356,8 @@ function AadhaarForm({ initialData, onSave, onBack }) {
     gender: 'MALE',
     address: 'enter ur address :(',
     aadhaarSuffix: '6969',
+    mobile: '9876543210',
+    email: 'email@example.com',
     photoUrl: 'https://placehold.co/200x250/ccc/fff?text=Photo'
   });
   const fileInputRef = useRef(null);
@@ -422,6 +426,16 @@ function AadhaarForm({ initialData, onSave, onBack }) {
         </div>
 
         <div className="form-group">
+          <label>Mobile Number</label>
+          <input type="text" name="mobile" value={formData.mobile} onChange={handleChange} required />
+        </div>
+
+        <div className="form-group">
+          <label>Email ID</label>
+          <input type="email" name="email" value={formData.email} onChange={handleChange} required />
+        </div>
+
+        <div className="form-group">
           <label>Full Address</label>
           <textarea name="address" value={formData.address} onChange={handleChange} rows="4" required></textarea>
         </div>
@@ -433,6 +447,8 @@ function AadhaarForm({ initialData, onSave, onBack }) {
 }
 
 function AadhaarDetail({ data, onBack }) {
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  
   if (!data) return null;
   
   return (
@@ -446,8 +462,31 @@ function AadhaarDetail({ data, onBack }) {
           </svg>
         </button>
         <h2>Aadhaar Card</h2>
-        <img src={data.photoUrl} alt="Profile" className="header-profile-pic" />
+        <img 
+          src={data.photoUrl} 
+          alt="Profile" 
+          className="header-profile-pic clickable" 
+          onClick={() => setShowProfileModal(true)}
+        />
       </div>
+
+      {/* Profile Modal Overlay */}
+      {showProfileModal && (
+        <div className="modal-overlay">
+          <div className="profile-modal">
+            <button className="close-modal-btn" onClick={() => setShowProfileModal(false)}>
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/>
+              </svg>
+            </button>
+            <div className="modal-header-curve"></div>
+            <img src={data.photoUrl} alt="User Photo" className="modal-profile-pic" />
+            <h3 className="modal-name">{data.name}</h3>
+            <p className="modal-info">DOB : {data.dob} | Gender : {data.gender}</p>
+            <img src="/unknown2.png" alt="DigiLocker Badge" className="modal-badge-logo" />
+          </div>
+        </div>
+      )}
 
       {/* Main Card */}
       <div className="aadhaar-document-card">
@@ -538,6 +577,116 @@ function AadhaarDetail({ data, onBack }) {
           <line x1="3" y1="6" x2="21" y2="6"></line>
           <line x1="3" y1="18" x2="21" y2="18"></line>
         </svg>
+      </div>
+    </div>
+  );
+}
+
+function MyProfileView({ data, onBack, onEdit }) {
+  if (!data) return null;
+
+  return (
+    <div className="my-profile-view">
+      <div className="profile-header-bg">
+        <div className="profile-header-top">
+          <button className="back-btn-white" onClick={onBack}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+          </button>
+          <h2>My Profile</h2>
+          <div className="header-right-icons">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.34-11.14l4.5 4.5" />
+            </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="18" cy="5" r="3"></circle>
+              <circle cx="6" cy="12" r="3"></circle>
+              <circle cx="18" cy="19" r="3"></circle>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div className="profile-content">
+        <div className="profile-main-info">
+          <img src={data.photoUrl} alt="User Photo" className="large-profile-pic" />
+          <h2 className="profile-name">{data.name}</h2>
+          <div className="verified-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Verified
+          </div>
+          <button className="vcard-btn">
+            Generate vCard 
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16" style={{marginLeft: '8px'}}>
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+          </button>
+        </div>
+
+        <div className="profile-details-card">
+          <div className="detail-row">
+            <span className="detail-label">DOB</span>
+            <span className="detail-value">{data.dob}</span>
+          </div>
+          <div className="detail-row">
+            <span className="detail-label">Gender</span>
+            <span className="detail-value">{data.gender}</span>
+          </div>
+          <div className="detail-row">
+            <span className="detail-label">Mobile</span>
+            <span className="detail-value flex-between">
+              {data.mobile}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16" className="edit-icon" onClick={onEdit}>
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+            </span>
+          </div>
+          <div className="detail-row">
+            <span className="detail-label">Email</span>
+            <span className="detail-value flex-between">
+              {data.email}
+              <button className="add-email-btn" onClick={onEdit}>Edit Email &rsaquo;</button>
+            </span>
+          </div>
+        </div>
+
+        <div className="quick-links-section">
+          <h3>Quick Links</h3>
+          <div className="quick-links-grid">
+            <button className="quick-link-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" width="18" height="18">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              My Account
+            </button>
+            <button className="quick-link-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" width="18" height="18">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="8.5" cy="7" r="4"></circle>
+                <line x1="20" y1="8" x2="20" y2="14"></line>
+                <line x1="23" y1="11" x2="17" y2="11"></line>
+              </svg>
+              Nominee
+            </button>
+            <button className="quick-link-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" width="18" height="18">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+              </svg>
+              My Activity
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
