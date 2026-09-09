@@ -448,8 +448,17 @@ function AadhaarForm({ initialData, onSave, onBack }) {
 
 function AadhaarDetail({ data, onBack }) {
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false);
   
   if (!data) return null;
+
+  const flipData = JSON.stringify({
+    name: data.name,
+    dob: data.dob,
+    gender: data.gender,
+    aadhaar: `xxxxxxxx${data.aadhaarSuffix}`,
+    address: data.address
+  });
   
   return (
     <div className="detail-view">
@@ -488,56 +497,73 @@ function AadhaarDetail({ data, onBack }) {
         </div>
       )}
 
-      {/* Main Card */}
-      <div className="aadhaar-document-card">
-        {/* Top Logos Image */}
-        <div className="aadhaar-card-header-exact">
-          <img src="/unknown.png" alt="Aadhaar Top Logos" className="exact-top-logos" />
-        </div>
-
-        {/* Identity Section */}
-        <div className="aadhaar-identity">
-          <img src={data.photoUrl} alt="User Photo" className="user-photo" />
-          <div className="user-details">
-            <h3 className="user-name">{data.name}</h3>
-            <p className="user-dob">{data.dob}</p>
-            <p className="user-gender">{data.gender}</p>
-            <h2 className="user-aadhaar-number">xxxxxxxx{data.aadhaarSuffix}</h2>
-          </div>
-        </div>
-
-        <hr className="divider" />
-
-        {/* Address Section */}
-        <div className="aadhaar-address">
-          <h4>Address</h4>
-          <p>{data.address}</p>
-        </div>
-
-        <hr className="divider-light" />
-
-        {/* Bottom Section */}
-        <div className="aadhaar-footer">
-          <div className="digilocker-badge-exact">
-             <img src="/unknown2.png" alt="Powered by DigiLocker" className="exact-badge-logo" />
-          </div>
+      {/* Main Card Container with Flip */}
+      <div className={`aadhaar-flip-container ${isFlipped ? 'flipped' : ''}`}>
+        <div className="aadhaar-flipper">
           
-          <div className="qr-section">
-            <img src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(data.name)}`} alt="QR Code" className="qr-code" />
-            <span>Tap to Zoom</span>
-          </div>
-        </div>
+          {/* Front of Card */}
+          <div className="aadhaar-document-card aadhaar-front">
+            {/* Top Logos Image */}
+            <div className="aadhaar-card-header-exact">
+              <img src="/unknown.png" alt="Aadhaar Top Logos" className="exact-top-logos" />
+            </div>
 
-        <div className="aadhaar-slogan-exact">
-           <img src="/unknown3.png" alt="Mera Aadhaar Meri Pehchaan" className="exact-slogan-image" onError={(e) => {
-             // Fallback just in case they only uploaded 2 images and "mera aadhar" is actually unknown2.png
-             // If unknown3.png fails to load, try unknown2.png, or we'll just show the text as fallback
-             e.target.style.display = 'none';
-             e.target.nextSibling.style.display = 'block';
-           }} />
-           <div style={{display: 'none', textAlign: 'center', fontSize: '1.1rem', fontWeight: '600', marginTop: '10px'}}>
-              मेरा <span className="red-text">आधार</span>, मेरी पहचान
-           </div>
+            {/* Identity Section */}
+            <div className="aadhaar-identity">
+              <img src={data.photoUrl} alt="User Photo" className="user-photo" />
+              <div className="user-details">
+                <h3 className="user-name">{data.name}</h3>
+                <p className="user-dob">{data.dob}</p>
+                <p className="user-gender">{data.gender}</p>
+                <h2 className="user-aadhaar-number">xxxxxxxx{data.aadhaarSuffix}</h2>
+              </div>
+            </div>
+
+            <hr className="divider" />
+
+            {/* Address Section */}
+            <div className="aadhaar-address">
+              <h4>Address</h4>
+              <p>{data.address}</p>
+            </div>
+
+            <hr className="divider-light" />
+
+            {/* Bottom Section */}
+            <div className="aadhaar-footer">
+              <div className="digilocker-badge-exact">
+                 <img src="/unknown2.png" alt="Powered by DigiLocker" className="exact-badge-logo" />
+              </div>
+              
+              <div className="qr-section" onClick={() => setIsFlipped(true)} style={{cursor: 'pointer'}}>
+                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(data.name)}`} alt="QR Code" className="qr-code" />
+                <span>Tap to Zoom</span>
+              </div>
+            </div>
+
+            <div className="aadhaar-slogan-exact">
+               <img src="/unknown3.png" alt="Mera Aadhaar Meri Pehchaan" className="exact-slogan-image" onError={(e) => {
+                 e.target.style.display = 'none';
+                 e.target.nextSibling.style.display = 'block';
+               }} />
+               <div style={{display: 'none', textAlign: 'center', fontSize: '1.1rem', fontWeight: '600', marginTop: '10px'}}>
+                  मेरा <span className="red-text">आधार</span>, मेरी पहचान
+               </div>
+            </div>
+          </div>
+
+          {/* Back of Card */}
+          <div className="aadhaar-document-card aadhaar-back">
+            <div className="aadhaar-back-header">
+               <h3>Document Details</h3>
+               <button className="close-flip-btn" onClick={() => setIsFlipped(false)}>✖</button>
+            </div>
+            <div className="aadhaar-back-qr-container">
+               <img src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(flipData)}`} alt="Full Details QR" className="large-qr" />
+            </div>
+            <p className="aadhaar-back-text">Scan this QR to view full Aadhaar details</p>
+          </div>
+
         </div>
       </div>
 
