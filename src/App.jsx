@@ -452,13 +452,7 @@ function AadhaarDetail({ data, onBack }) {
   
   if (!data) return null;
 
-  const flipData = JSON.stringify({
-    name: data.name,
-    dob: data.dob,
-    gender: data.gender,
-    aadhaar: `xxxxxxxx${data.aadhaarSuffix}`,
-    address: data.address
-  });
+  const flipData = `<PrintLetterBarcodeData uid="xxxxxxxx${data.aadhaarSuffix}" name="${data.name}" gender="${data.gender ? data.gender.charAt(0) : 'M'}" dob="${data.dob}" address="${data.address}"/>`;
   
   return (
     <div className="detail-view">
