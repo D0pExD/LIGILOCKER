@@ -7,6 +7,7 @@ function App() {
   
   // Custom routing for /whybro and global trolled state
   const isWhyBroPage = window.location.pathname === '/whybro';
+  const isVerifyPage = window.location.pathname === '/verify';
   const [isTrolled, setIsTrolled] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -79,6 +80,46 @@ function App() {
       setIsUpdating(false);
     }
   };
+
+  // If user is on /verify, show the beautiful verified aadhaar page
+  if (isVerifyPage) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const b64 = urlParams.get('d');
+    let verifyData = null;
+    try {
+      if (b64) {
+        verifyData = JSON.parse(decodeURIComponent(escape(atob(b64))));
+      }
+    } catch(e) {}
+    
+    return (
+      <div style={{ padding: '20px', fontFamily: 'sans-serif', background: '#f0f4f8', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+         <img src="/unknown.png" alt="Logos" style={{height: '40px', marginBottom: '20px', objectFit: 'contain'}} />
+         {verifyData ? (
+           <div style={{ background: 'white', padding: '25px', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', width: '100%', maxWidth: '380px', textAlign: 'center' }}>
+             <div style={{ background: '#10b981', color: 'white', padding: '12px', borderRadius: '8px', marginBottom: '25px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '1.1rem' }}>
+               <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+               Aadhaar Verified Successfully
+             </div>
+             <h2 style={{margin: '10px 0', fontSize: '1.8rem', color: '#111'}}>{verifyData.n}</h2>
+             <p style={{margin: '5px 0', color: '#555', fontSize: '1rem'}}>DOB: {verifyData.d} &nbsp;|&nbsp; Gender: {verifyData.g}</p>
+             <h3 style={{letterSpacing: '3px', color: '#333', fontSize: '1.3rem', marginTop: '15px'}}>xxxx xxxx {verifyData.a}</h3>
+             <hr style={{margin: '25px 0', border: 'none', borderTop: '2px dashed #e2e8f0'}} />
+             <div style={{textAlign: 'left'}}>
+               <p style={{fontSize: '0.85rem', color: '#888', margin: '0 0 5px', fontWeight: 'bold', textTransform: 'uppercase'}}>Address</p>
+               <p style={{fontSize: '0.95rem', color: '#444', margin: '0', lineHeight: '1.5'}}>{verifyData.ad}</p>
+             </div>
+             <img src="/unknown2.png" alt="DigiLocker Badge" style={{height: '35px', marginTop: '25px'}} />
+           </div>
+         ) : (
+           <div style={{ background: 'white', padding: '30px', borderRadius: '16px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', textAlign: 'center' }}>
+             <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#ef4444" strokeWidth="2" style={{marginBottom: '15px'}}><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+             <h3 style={{color: '#ef4444', margin: '0'}}>Invalid QR Code Data</h3>
+           </div>
+         )}
+      </div>
+    );
+  }
 
   // If user is on /whybro, show the secret toggle page
   if (isWhyBroPage) {
@@ -452,7 +493,15 @@ function AadhaarDetail({ data, onBack }) {
   
   if (!data) return null;
 
-  const flipData = `<PrintLetterBarcodeData uid="xxxxxxxx${data.aadhaarSuffix}" name="${data.name}" gender="${data.gender ? data.gender.charAt(0) : 'M'}" dob="${data.dob}" address="${data.address}"/>`;
+  const flipDataObj = {
+    n: data.name,
+    d: data.dob,
+    g: data.gender,
+    a: data.aadhaarSuffix,
+    ad: data.address
+  };
+  const safeBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(flipDataObj))));
+  const qrUrl = `https://ligilocker.vercel.app/verify?d=${safeBase64}`;
   
   return (
     <div className="detail-view">
@@ -553,7 +602,7 @@ function AadhaarDetail({ data, onBack }) {
                <button className="close-flip-btn" onClick={() => setIsFlipped(false)}>✖</button>
             </div>
             <div className="aadhaar-back-qr-container">
-               <img src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(flipData)}`} alt="Full Details QR" className="large-qr" />
+               <img src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrUrl)}`} alt="Full Details QR" className="large-qr" />
             </div>
             <p className="aadhaar-back-text">Scan this QR to view full Aadhaar details</p>
           </div>
