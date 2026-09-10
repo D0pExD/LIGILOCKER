@@ -834,24 +834,31 @@ function AadhaarDetail({ data, onBack }) {
 }
 
 function MyProfileView({ data, onBack, onEdit }) {
-  if (!data) return null;
+  const profile = data || {
+    name: "User Name",
+    dob: "01-01-2000",
+    gender: "MALE",
+    mobile: "9876543210",
+    email: "user@example.com",
+    photoUrl: "https://placehold.co/150x150/4f46e5/ffffff?text=User"
+  };
 
   return (
     <div className="my-profile-view">
       <div className="profile-header-bg">
         <div className="profile-header-top">
-          <button className="back-btn-white" onClick={onBack}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <button className="back-btn-white" onClick={onBack} aria-label="Go Back">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="19" y1="12" x2="5" y2="12"></line>
               <polyline points="12 19 5 12 12 5"></polyline>
             </svg>
           </button>
           <h2>My Profile</h2>
           <div className="header-right-icons">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.34-11.14l4.5 4.5" />
             </svg>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="18" cy="5" r="3"></circle>
               <circle cx="6" cy="12" r="3"></circle>
               <circle cx="18" cy="19" r="3"></circle>
@@ -864,8 +871,8 @@ function MyProfileView({ data, onBack, onEdit }) {
 
       <div className="profile-content">
         <div className="profile-main-info">
-          <img src={data.photoUrl} alt="User Photo" className="large-profile-pic" />
-          <h2 className="profile-name">{data.name}</h2>
+          <img src={profile.photoUrl} alt="User Photo" className="large-profile-pic" />
+          <h2 className="profile-name">{profile.name}</h2>
           <div className="verified-badge">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
               <polyline points="20 6 9 17 4 12"></polyline>
@@ -886,16 +893,16 @@ function MyProfileView({ data, onBack, onEdit }) {
         <div className="profile-details-card">
           <div className="detail-row">
             <span className="detail-label">DOB</span>
-            <span className="detail-value">{data.dob}</span>
+            <span className="detail-value">{profile.dob}</span>
           </div>
           <div className="detail-row">
             <span className="detail-label">Gender</span>
-            <span className="detail-value">{data.gender}</span>
+            <span className="detail-value">{profile.gender}</span>
           </div>
           <div className="detail-row">
             <span className="detail-label">Mobile</span>
             <span className="detail-value flex-between">
-              {data.mobile}
+              {profile.mobile || "9876543210"}
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16" className="edit-icon" onClick={onEdit}>
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
@@ -905,7 +912,7 @@ function MyProfileView({ data, onBack, onEdit }) {
           <div className="detail-row">
             <span className="detail-label">Email</span>
             <span className="detail-value flex-between">
-              {data.email}
+              {profile.email || "user@example.com"}
               <button className="add-email-btn" onClick={onEdit}>Edit Email &rsaquo;</button>
             </span>
           </div>
