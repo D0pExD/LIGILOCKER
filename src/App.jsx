@@ -783,7 +783,7 @@ function AadhaarDetail({ data, onBack }) {
               <img src={data.photoUrl} alt="User Photo" className="modal-profile-pic" />
               <h3 className="modal-name">{data.name}</h3>
               <p className="modal-info">DOB : {data.dob} | Gender : {data.gender}</p>
-              <img src="/unknown2.png" alt="DigiLocker Badge" className="modal-badge-logo" />
+              <img src="/DigiLocker.svg.webp" alt="DigiLocker Logo" className="modal-badge-logo" />
             </div>
           </div>
         </div>
