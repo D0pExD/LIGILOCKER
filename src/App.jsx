@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Panzoom from '@panzoom/panzoom/dist/panzoom.es.js';
 import './App.css';
 
 function App() {
@@ -487,6 +488,215 @@ function AadhaarForm({ initialData, onSave, onBack }) {
   );
 }
 
+function AadhaarDocumentBundle({ data, isFlipped, setIsFlipped, qrUrl }) {
+  const bundleRef = useRef(null);
+  const panzoomRef = useRef(null);
+  const [isZoomed, setIsZoomed] = useState(false);
+
+  useEffect(() => {
+    const el = bundleRef.current;
+    if (!el) return;
+
+    const panzoom = Panzoom(el, {
+      maxScale: 3.5,
+      minScale: 0.65, // Allows shrinking smaller while actively pinching in / holding
+      startScale: 1,
+      panOnlyWhenZoomed: true,
+      pinchAndPan: true,
+      animate: true,
+      duration: 250,
+      easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
+      cursor: 'default',
+      excludeClass: 'clickable-interactive'
+    });
+
+    panzoomRef.current = panzoom;
+
+    const onPanzoomChange = (e) => {
+      const currentScale = e.detail.scale;
+      setIsZoomed(currentScale > 1.05);
+    };
+
+    // When pinch/unzoom finishes or fingers are lifted, smoothly snap back to 1x if scale < 1.05
+    const checkAndSnapBack = () => {
+      const currentScale = panzoom.getScale();
+      if (currentScale < 1.05) {
+        panzoom.reset({ 
+          animate: true, 
+          duration: 320, 
+          easing: 'cubic-bezier(0.175, 0.885, 0.32, 1.15)' 
+        });
+      }
+    };
+
+    let lastTap = 0;
+    const onPointerUp = (e) => {
+      if (e.target.closest('.clickable-interactive')) return;
+
+      const now = Date.now();
+      const diff = now - lastTap;
+      if (diff > 40 && diff < 300) {
+        e.preventDefault();
+        const currentScale = panzoom.getScale();
+        if (currentScale > 1.08) {
+          panzoom.reset({ 
+            animate: true, 
+            duration: 300, 
+            easing: 'cubic-bezier(0.25, 1, 0.5, 1)' 
+          });
+        } else {
+          panzoom.zoomToPoint(1.9, { clientX: e.clientX, clientY: e.clientY }, { 
+            animate: true, 
+            duration: 300, 
+            easing: 'cubic-bezier(0.25, 1, 0.5, 1)' 
+          });
+        }
+      }
+      lastTap = now;
+      checkAndSnapBack();
+    };
+
+    const onTouchEnd = (e) => {
+      if (e.touches.length === 0) {
+        checkAndSnapBack();
+      }
+    };
+
+    const onWheel = (e) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        panzoom.zoomWithWheel(e);
+        checkAndSnapBack();
+      }
+    };
+
+    el.addEventListener('panzoomchange', onPanzoomChange);
+    el.addEventListener('panzoomend', checkAndSnapBack);
+    el.addEventListener('pointerup', onPointerUp);
+    el.addEventListener('touchend', onTouchEnd);
+    el.parentElement?.addEventListener('wheel', onWheel, { passive: false });
+
+    return () => {
+      el.removeEventListener('panzoomchange', onPanzoomChange);
+      el.removeEventListener('panzoomend', checkAndSnapBack);
+      el.removeEventListener('pointerup', onPointerUp);
+      el.removeEventListener('touchend', onTouchEnd);
+      el.parentElement?.removeEventListener('wheel', onWheel);
+      panzoom.destroy();
+    };
+  }, []);
+
+  const handleResetZoom = () => {
+    if (panzoomRef.current) {
+      panzoomRef.current.reset({ animate: true });
+    }
+  };
+
+  return (
+    <div 
+      className="aadhaar-zoomable-bundle" 
+      ref={bundleRef}
+    >
+      {/* Main Card Container with Flip */}
+      <div className={`aadhaar-flip-container ${isFlipped ? 'flipped' : ''}`}>
+        <div className="aadhaar-flipper">
+          
+          {/* Front of Card */}
+          <div className="aadhaar-document-card aadhaar-front">
+            {/* Top Logos Image */}
+            <div className="aadhaar-card-header-exact">
+              <img src="/unknown.png" alt="Aadhaar Top Logos" className="exact-top-logos" />
+            </div>
+
+            {/* Identity Section */}
+            <div className="aadhaar-identity">
+              <img src={data.photoUrl} alt="User Photo" className="user-photo" />
+              <div className="user-details">
+                <h3 className="user-name">{data.name}</h3>
+                <p className="user-dob">{data.dob}</p>
+                <p className="user-gender">{data.gender}</p>
+                <h2 className="user-aadhaar-number">xxxxxxxx{data.aadhaarSuffix}</h2>
+              </div>
+            </div>
+
+            <hr className="divider" />
+
+            {/* Address Section */}
+            <div className="aadhaar-address">
+              <h4>Address</h4>
+              <p>{data.address}</p>
+            </div>
+
+            <hr className="divider-light" />
+
+            {/* Bottom Section */}
+            <div className="aadhaar-footer">
+              <div className="digilocker-badge-exact">
+                 <img src="/unknown2.png" alt="Powered by DigiLocker" className="exact-badge-logo" />
+              </div>
+              
+              <div className="qr-section clickable-interactive" onClick={() => setIsFlipped(true)} style={{cursor: 'pointer'}}>
+                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(qrUrl)}`} alt="QR Code" className="qr-code" />
+                <span>Tap to Zoom</span>
+              </div>
+            </div>
+
+            <div className="aadhaar-slogan-exact">
+               <div className="slogan-separator-line"></div>
+               <div className="slogan-text-exact">
+                  मेरा <span className="red-text">आधार</span>, मेरी पहचान
+               </div>
+            </div>
+          </div>
+
+          {/* Back of Card */}
+          <div className="aadhaar-document-card aadhaar-back">
+            <div className="aadhaar-back-header">
+               <h3>Document Details</h3>
+               <button className="close-flip-btn clickable-interactive" onClick={() => setIsFlipped(false)}>✖</button>
+            </div>
+            <div className="aadhaar-back-qr-container">
+               <img src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrUrl)}`} alt="Full Details QR" className="large-qr" />
+            </div>
+            <p className="aadhaar-back-text">Scan this QR to view full Aadhaar details</p>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Info Box */}
+      <div className="info-box">
+        <p className="info-title">Did you know?</p>
+        <p className="info-desc">Indian Railways and Airports accept Digital Aadhaar through DigiLocker as valid identity proof.</p>
+      </div>
+
+      {/* Share Box */}
+      <div className="share-box">
+        <span className="share-text">Tell your friends and family about DigiLocker</span>
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="#374151" stroke="#374151" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="18" cy="5" r="3" fill="#374151" />
+          <circle cx="6" cy="12" r="3" fill="#374151" />
+          <circle cx="18" cy="19" r="3" fill="#374151" />
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" stroke="#374151" strokeWidth="2.5" />
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" stroke="#374151" strokeWidth="2.5" />
+        </svg>
+      </div>
+
+      {isZoomed && (
+        <button 
+          className="zoom-reset-btn clickable-interactive" 
+          onClick={(e) => {
+            e.stopPropagation();
+            handleResetZoom();
+          }}
+        >
+          Reset Zoom (100%)
+        </button>
+      )}
+    </div>
+  );
+}
+
 function AadhaarDetail({ data, onBack }) {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -541,89 +751,14 @@ function AadhaarDetail({ data, onBack }) {
         </div>
       )}
 
-      {/* Main Card Container with Flip */}
-      <div className={`aadhaar-flip-container ${isFlipped ? 'flipped' : ''}`}>
-        <div className="aadhaar-flipper">
-          
-          {/* Front of Card */}
-          <div className="aadhaar-document-card aadhaar-front">
-            {/* Top Logos Image */}
-            <div className="aadhaar-card-header-exact">
-              <img src="/unknown.png" alt="Aadhaar Top Logos" className="exact-top-logos" />
-            </div>
-
-            {/* Identity Section */}
-            <div className="aadhaar-identity">
-              <img src={data.photoUrl} alt="User Photo" className="user-photo" />
-              <div className="user-details">
-                <h3 className="user-name">{data.name}</h3>
-                <p className="user-dob">{data.dob}</p>
-                <p className="user-gender">{data.gender}</p>
-                <h2 className="user-aadhaar-number">xxxxxxxx{data.aadhaarSuffix}</h2>
-              </div>
-            </div>
-
-            <hr className="divider" />
-
-            {/* Address Section */}
-            <div className="aadhaar-address">
-              <h4>Address</h4>
-              <p>{data.address}</p>
-            </div>
-
-            <hr className="divider-light" />
-
-            {/* Bottom Section */}
-            <div className="aadhaar-footer">
-              <div className="digilocker-badge-exact">
-                 <img src="/unknown2.png" alt="Powered by DigiLocker" className="exact-badge-logo" />
-              </div>
-              
-              <div className="qr-section" onClick={() => setIsFlipped(true)} style={{cursor: 'pointer'}}>
-                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(qrUrl)}`} alt="QR Code" className="qr-code" />
-                <span>Tap to Zoom</span>
-              </div>
-            </div>
-
-            <div className="aadhaar-slogan-exact">
-               <div className="slogan-separator-line"></div>
-               <div className="slogan-text-exact">
-                  मेरा <span className="red-text">आधार</span>, मेरी पहचान
-               </div>
-            </div>
-          </div>
-
-          {/* Back of Card */}
-          <div className="aadhaar-document-card aadhaar-back">
-            <div className="aadhaar-back-header">
-               <h3>Document Details</h3>
-               <button className="close-flip-btn" onClick={() => setIsFlipped(false)}>✖</button>
-            </div>
-            <div className="aadhaar-back-qr-container">
-               <img src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrUrl)}`} alt="Full Details QR" className="large-qr" />
-            </div>
-            <p className="aadhaar-back-text">Scan this QR to view full Aadhaar details</p>
-          </div>
-
-        </div>
-      </div>
-
-      {/* Info Box */}
-      <div className="info-box">
-        <p className="info-title">Did you know?</p>
-        <p className="info-desc">Indian Railways and Airports accept Digital Aadhaar through DigiLocker as valid identity proof.</p>
-      </div>
-
-      {/* Share Box */}
-      <div className="share-box">
-        <span className="share-text">Tell your friends and family about DigiLocker</span>
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="#374151" stroke="#374151" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="18" cy="5" r="3" fill="#374151" />
-          <circle cx="6" cy="12" r="3" fill="#374151" />
-          <circle cx="18" cy="19" r="3" fill="#374151" />
-          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" stroke="#374151" strokeWidth="2.5" />
-          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" stroke="#374151" strokeWidth="2.5" />
-        </svg>
+      {/* Scrollable Document Area containing the unified Zoomable Component */}
+      <div className="detail-scroll-area">
+        <AadhaarDocumentBundle 
+          data={data} 
+          isFlipped={isFlipped} 
+          setIsFlipped={setIsFlipped} 
+          qrUrl={qrUrl} 
+        />
       </div>
 
       {/* Detail View Bottom Nav matching Ram's reference */}
