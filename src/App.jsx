@@ -503,6 +503,13 @@ function AadhaarDocumentBundle({ data, isFlipped, setIsFlipped, qrUrl }) {
       startScale: 1,
       panOnlyWhenZoomed: true,
       pinchAndPan: true,
+      touchAction: 'pan-y',
+      handleStartEvent: (event) => {
+        // Only preventDefault if zoomed in (> 1.05) so panning works, else allow natural browser vertical scroll
+        if (panzoom.getScale() > 1.05) {
+          event.preventDefault();
+        }
+      },
       animate: true,
       duration: 250,
       easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
@@ -514,7 +521,15 @@ function AadhaarDocumentBundle({ data, isFlipped, setIsFlipped, qrUrl }) {
 
     const onPanzoomChange = (e) => {
       const currentScale = e.detail.scale;
-      setIsZoomed(currentScale > 1.05);
+      const zoomed = currentScale > 1.05;
+      setIsZoomed(zoomed);
+      if (zoomed) {
+        el.style.touchAction = 'none';
+        if (el.parentElement) el.parentElement.style.touchAction = 'none';
+      } else {
+        el.style.touchAction = 'pan-y';
+        if (el.parentElement) el.parentElement.style.touchAction = 'pan-y';
+      }
     };
 
     // When pinch/unzoom finishes or fingers are lifted, smoothly snap back to 1x if scale < 1.05
@@ -526,6 +541,8 @@ function AadhaarDocumentBundle({ data, isFlipped, setIsFlipped, qrUrl }) {
           duration: 320, 
           easing: 'cubic-bezier(0.175, 0.885, 0.32, 1.15)' 
         });
+        el.style.touchAction = 'pan-y';
+        if (el.parentElement) el.parentElement.style.touchAction = 'pan-y';
       }
     };
 
@@ -544,12 +561,16 @@ function AadhaarDocumentBundle({ data, isFlipped, setIsFlipped, qrUrl }) {
             duration: 300, 
             easing: 'cubic-bezier(0.25, 1, 0.5, 1)' 
           });
+          el.style.touchAction = 'pan-y';
+          if (el.parentElement) el.parentElement.style.touchAction = 'pan-y';
         } else {
           panzoom.zoomToPoint(1.9, { clientX: e.clientX, clientY: e.clientY }, { 
             animate: true, 
             duration: 300, 
             easing: 'cubic-bezier(0.25, 1, 0.5, 1)' 
           });
+          el.style.touchAction = 'none';
+          if (el.parentElement) el.parentElement.style.touchAction = 'none';
         }
       }
       lastTap = now;
@@ -570,16 +591,29 @@ function AadhaarDocumentBundle({ data, isFlipped, setIsFlipped, qrUrl }) {
       }
     };
 
+    // Intercept touchstart for multi-touch pinch to prevent browser viewport zoom
+    const onTouchStart = (e) => {
+      if (e.touches.length > 1) {
+        e.preventDefault();
+      }
+    };
+
     el.addEventListener('panzoomchange', onPanzoomChange);
     el.addEventListener('panzoomend', checkAndSnapBack);
     el.addEventListener('pointerup', onPointerUp);
+    el.addEventListener('touchstart', onTouchStart, { passive: false });
     el.addEventListener('touchend', onTouchEnd);
     el.parentElement?.addEventListener('wheel', onWheel, { passive: false });
+
+    // Set initial touch action so vertical scrolling is immediately allowed
+    el.style.touchAction = 'pan-y';
+    if (el.parentElement) el.parentElement.style.touchAction = 'pan-y';
 
     return () => {
       el.removeEventListener('panzoomchange', onPanzoomChange);
       el.removeEventListener('panzoomend', checkAndSnapBack);
       el.removeEventListener('pointerup', onPointerUp);
+      el.removeEventListener('touchstart', onTouchStart);
       el.removeEventListener('touchend', onTouchEnd);
       el.parentElement?.removeEventListener('wheel', onWheel);
       panzoom.destroy();
@@ -735,18 +769,22 @@ function AadhaarDetail({ data, onBack }) {
 
       {/* Profile Modal Overlay */}
       {showProfileModal && (
-        <div className="modal-overlay">
-          <div className="profile-modal">
-            <button className="close-modal-btn" onClick={() => setShowProfileModal(false)}>
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/>
-              </svg>
-            </button>
-            <div className="modal-header-curve"></div>
-            <img src={data.photoUrl} alt="User Photo" className="modal-profile-pic" />
-            <h3 className="modal-name">{data.name}</h3>
-            <p className="modal-info">DOB : {data.dob} | Gender : {data.gender}</p>
-            <img src="/unknown2.png" alt="DigiLocker Badge" className="modal-badge-logo" />
+        <div className="modal-overlay" onClick={() => setShowProfileModal(false)}>
+          <div className="profile-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-top-section">
+              <button className="close-modal-btn" onClick={() => setShowProfileModal(false)}>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <div className="modal-bottom-section">
+              <img src={data.photoUrl} alt="User Photo" className="modal-profile-pic" />
+              <h3 className="modal-name">{data.name}</h3>
+              <p className="modal-info">DOB : {data.dob} | Gender : {data.gender}</p>
+              <img src="/unknown2.png" alt="DigiLocker Badge" className="modal-badge-logo" />
+            </div>
           </div>
         </div>
       )}
