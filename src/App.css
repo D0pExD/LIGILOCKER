@@ -872,6 +872,7 @@ body {
   border-bottom-left-radius: 50% 20%;
   border-bottom-right-radius: 50% 20%;
   position: relative;
+  z-index: 1;
 }
 .profile-header-top {
   display: flex;
@@ -925,14 +926,30 @@ body {
 .profile-content {
   padding: 0 20px;
   margin-top: -65px;
-  display: flex; flex-direction: column; align-items: center;
-}
-.large-profile-pic {
-  width: 130px; height: 130px; border-radius: 50%;
-  border: 4px solid white; object-fit: cover;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 25;
 }
 .profile-main-info {
-  display: flex; flex-direction: column; align-items: center; width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  position: relative;
+  z-index: 25;
+}
+.large-profile-pic {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  border: 4px solid white;
+  object-fit: cover;
+  position: relative;
+  z-index: 30;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  background: #ffffff;
 }
 .profile-name {
   margin: 15px 0 5px; font-size: 1.5rem; font-weight: 700;
